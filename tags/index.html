@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      html,
+      * {
+        font-family: "Rubik", sans-serif;
+        overflow-y: hidden;
+      }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>tags</title>
+  </head>
+
+  <body>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <svg id="tags"></svg>
+      <div class="value-line"></div>
+    </div>
+
+    <script>
+      let rawData;
+
+      var canvas = d3.select("#tags");
+      var margin = 300;
+
+      document.getElementById("tags").style.width = window.innerWidth - 100;
+      document.getElementById("tags").style.height = window.innerHeight * 1.2;
+      var width = window.innerWidth - margin - 100;
+      var height = window.innerHeight * 1.2 - margin;
+
+      var xScale;
+      var yScale;
+
+      var group = canvas
+        .append("g")
+        .attr("transform", "translate(" + 0 + "," + 50 + ")");
+
+      d3.json("./data.json", function (data) {
+        console.log(data);
+        rawData = data;
+        var nameArray = rawData.map((data) => data.name);
+        var valueArray = rawData.map((data) => data.value);
+
+        yScale = d3
+          .scaleBand()
+          .domain(nameArray)
+          .range([0, height])
+          .padding(0.2);
+        var yAxis = d3.axisLeft(yScale);
+
+        xScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(valueArray)])
+          .range([0, width]);
+        var xAxis = d3.axisBottom(xScale);
+        console.log(yAxis, xAxis);
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 150 + ", " + height + ")")
+          .call(xAxis)
+          .selectAll("line,path")
+          .style("stroke", "#2f2f2f")
+          .style("stroke-width", "3px");
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 150 + ", " + 0 + ")")
+          .call(yAxis)
+          .selectAll("line,path")
+          .style("stroke", "#2f2f2f")
+          .style("stroke-width", "3px");
+
+        group
+          .selectAll("text")
+          .style("font-family", "Rubik")
+          .style("fill", "#2f2f2f")
+          .style("font-size", "13px");
+
+        group
+          .append("text")
+          .attr("id", "xAxisLabel")
+          .attr("y", height + 70)
+          .attr("x", width / 2 + 50)
+          .style("font-size", "13px")
+          .style("font-family", "Rubik")
+          .style("fill", "#2f2f2f")
+          .text("Number of Tags by Type");
+
+        group
+          .selectAll("rect")
+          .data(rawData)
+          .enter()
+          .append("rect")
+          .attr("y", function (d) {
+            return yScale(d.name);
+          })
+          .attr("x", 150)
+          .attr("height", yScale.bandwidth())
+          .attr("width", function (d) {
+            return xScale(d.value);
+          })
+          .style("fill", "#090042")
+          .style("opacity", "0.5")
+          .on("mouseover", function (d, event) {
+            d3.select(this).transition().duration(100).style("opacity", "1");
+            d3.select("body").style("cursor", "pointer");
+            group
+              .append("line")
+              .attr("class", "value-line")
+              .attr("x1", xScale(d.value) + 150)
+              .attr("x2", xScale(d.value) + 150)
+              .attr("y1", yScale(d.name))
+              .attr("y2", height)
+              .style("stroke", "red")
+              .style("stroke-width", "1px")
+              .style("stroke-dasharray", "4 4");
+            group
+              .append("text")
+              .attr("class", "value-text")
+              .attr("x", xScale(d.value) + 150 + 5)
+              .attr("y", (yScale(d.name) + height) / 2)
+              .style("font-size", "13px")
+              .style("font-family", "Rubik")
+              .style("fill", "red")
+              .text(d.name + ": " + d.value);
+          })
+          .on("mouseout", function (d, event) {
+            d3.select(this).transition().duration(100).style("opacity", "0.5");
+            d3.select("body").style("cursor", "default");
+            d3.selectAll(".value-line").remove();
+            d3.selectAll(".value-text").remove();
+          });
+      });
+    </script>
+  </body>
+</html>

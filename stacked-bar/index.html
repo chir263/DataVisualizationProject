@@ -1,0 +1,184 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Courier New", monospace;
+      }
+      svg {
+        font-family: "Courier New", monospace;
+      }
+      .line {
+        stroke-width: 2;
+        fill: none;
+      }
+
+      .axis path {
+        stroke: black;
+      }
+
+      .text {
+        font-size: 12px;
+      }
+
+      .title-text {
+        font-size: 12px;
+      }
+      #chart_line {
+        /* display: inline; */
+      }
+      #chart_line_tooltip {
+        /* display: inline-block; */
+        height: 500px;
+        width: 200px;
+        background-color: grey;
+        margin: 10px;
+      }
+      #chart_line_labels,
+      #chart_line_labels1 {
+        /* display: inline-block; */
+        /* height: 500px; */
+        width: 270px;
+        /* background-color: grey; */
+        height: auto;
+        overflow: scroll;
+        /* margin: 10px; */
+        padding: 5px;
+      }
+      #chart_line_parent {
+        display: inline-flex;
+      }
+      #multi_line_chart_form,
+      #framework,
+      #multi_line_chart_start,
+      #multi_line_chart_reset {
+        font-size: 17px;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background-color: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: rgb(179, 179, 179);
+      }
+
+      /* #multi_line_chart_start, */
+      #multi_line_chart_start img {
+        /* border-radius: 50%; */
+        width: 35px;
+        height: 35px;
+      }
+      #multi_line_chart_reset img,
+      #multi_line_chart_back img,
+      #multi_line_chart_next img {
+        width: 35px;
+        height: 35px;
+      }
+      #multi_line_chart_start,
+      #multi_line_chart_reset,
+      #multi_line_chart_back,
+      #multi_line_chart_next {
+        transition: 0.2s ease;
+        background-color: rgba(0, 0, 0, 0);
+        border: none;
+        border-radius: 2px;
+        /* margin-left: 0; */
+      }
+
+      #multi_line_chart_start:hover,
+      #multi_line_chart_reset:hover,
+      #multi_line_chart_back:hover,
+      #multi_line_chart_next:hover,
+      #framework:hover {
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+      }
+
+      #multi_line_chart_start:active,
+      #multi_line_chart_reset:active,
+      #multi_line_chart_back:active,
+      #multi_line_chart_next:active,
+      #framework:active {
+        background-color: rgba(0, 0, 0, 0.7);
+        outline: none;
+        color: white;
+      }
+
+      #framework {
+        transition: 0.2s ease;
+        background-color: rgba(0, 0, 0, 0);
+        border: none;
+        border-radius: 2px;
+        height: 35px;
+        margin-top: 0;
+        outline: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script src="./data.js"></script>
+    <form id="multi_line_chart_form" style="margin: 0">
+      <button id="multi_line_chart_start" title="Start">
+        <img src="./img/icons8-play-button-circled-64.png" />
+      </button>
+      <button id="multi_line_chart_back" title="Previous">
+        <img src="./img/icons8-less-than-50.png" />
+      </button>
+      <button id="multi_line_chart_next" title="Next">
+        <img src="./img/icons8-more-than-50.png" />
+      </button>
+      <button id="multi_line_chart_reset" title="Reset">
+        <img src="./img/icons8-reset-30.png" />
+      </button>
+      <select id="framework" onchange="onchangeHandle(this)">
+        <option class="op_mul_line" value="1">Index</option>
+        <option class="op_mul_line" value="2">Rating</option>
+      </select>
+    </form>
+    <div id="chart_line_parent">
+      <div id="chart_line"></div>
+      <svg id="chart_line_labels"></svg>
+      <svg id="chart_line_labels1"></svg>
+      <!-- <div id="chart_line_tooltip">
+        <span> chirag </span>
+      </div> -->
+    </div>
+
+    <script src="./script.js"></script>
+    <script>
+      plotLine("index");
+
+      function onchangeHandle(selectObject) {
+        var value = selectObject.value;
+        var id = window.setTimeout(function () {}, 0);
+        while (id--) {
+          window.clearTimeout(id);
+        }
+        if (value == 1) {
+          plotLine("index");
+        } else if (value == 2) {
+          plotLine("rating");
+        }
+      }
+      // window.load(() => {
+      document.getElementById("chart_line_labels1").style.width =
+        0.18 * window.innerWidth;
+
+      document.getElementById("chart_line_labels").style.width =
+        0.18 * window.innerWidth;
+      // });
+    </script>
+  </body>
+</html>

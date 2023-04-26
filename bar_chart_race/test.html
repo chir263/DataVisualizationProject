@@ -1,0 +1,68 @@
+<script>
+  async function load() {
+    // for (let name of handle_list) {
+    data = await fetch(`https://codeforces.com/api/user.ratedList`);
+    data = await data.json();
+    // console.log(data);
+    let map = {};
+    let cnt = 0;
+    let min = 10000;
+    for (let x of data.result) {
+      if (x.country) {
+        let regTime = new Date(Number(x.registrationTimeSeconds) * 1000);
+        let yr = Number(regTime.toLocaleDateString("default").split("/")[2]);
+        let mon = Number(regTime.toLocaleDateString("default").split("/")[1]);
+        mon--;
+        min = Math.min(min, yr);
+        yr = Number(`${yr}.${mon === 11 || mon === 10 ? 9 : mon}`);
+        // console.log(yr);
+        if (map[x.country]) {
+          if (map[x.country][yr]) {
+            map[x.country][yr]++;
+          } else {
+            map[x.country][yr] = 1;
+          }
+        } else {
+          map[x.country] = {};
+          map[x.country][yr] = 1;
+        }
+        cnt++;
+      }
+    }
+    let my_data = [];
+
+    let counter = 2010;
+
+    let yr = {};
+    yr = { 2009.9: {} };
+
+    for (let x of Object.keys(map)) {
+      yr[2009.9][x] = 0;
+    }
+    // console.log(yr);
+    for (; counter <= 2023.3; counter = Number((counter + 0.1).toFixed(1))) {
+      let prev = Number((counter - 0.1).toFixed(1));
+      for (let x of Object.keys(map)) {
+        my_data.push({
+          name: x,
+          value: yr[prev][x] + (map[x][counter] || 0),
+          lastValue: yr[prev][x],
+          year: counter,
+        });
+        // console.log(x, prev);
+        if (!yr[counter]) yr[counter] = {};
+        yr[counter][x] = yr[prev][x] + (map[x][counter] || 0);
+      }
+      //   console.log(yr);
+    }
+    // console.log(my_data);
+    let json = my_data;
+    const header = Object.keys(json[0]);
+    const rows = json.map((obj) => Object.values(obj));
+    rows.unshift(header);
+    const csv = rows.map((row) => row.join(",")).join("\n");
+
+    console.log(csv);
+  }
+  load();
+</script>

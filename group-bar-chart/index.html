@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<style>
+  html,
+    body {
+      /* font-family: "Courier New", monospace; */
+    /* background-color: #F2EDE4; */
+    font-family: 'Poppins', sans-serif;
+    }
+
+    .container {
+    margin-top: 20px;
+    }
+
+    .axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    }
+
+    .bar {
+    fill: steelblue;
+    }
+
+    #newbie{
+    color: #8d99ae;
+}
+#pupil{
+    color: #57cc99
+}
+#specialist{
+    color: #90f1ef
+}
+#expert{
+    color: #4361ee
+}
+#candidatemaster{
+    color: #7209b7
+}
+#master{
+    color: #ff9b54
+}
+#internationalmaster{
+    color: #ff7f51
+}
+#grandmaster{
+    color:  #ad2831
+}
+#internationalgrandmaster{
+    color : #800e13
+}
+#legendarygrandmaster{
+    color: #640d14
+}
+</style>
+
+
+<script src="./v3.js"></script>
+<body>
+    <div class="container">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                <form role="form" class="categories">
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="graph"></div>
+          </div>
+        </div>
+      </div>
+<div id="tooltip" class="hidden">
+
+    <script>
+ids = ["newbie","pupil","specialist","expert","candidate master","master","grandmaster"];
+ranges = ["newbie","pupil","specialist","expert","candidate master","master","grandmaster"];
+
+d3.json("final.json", function(error, data) {
+    if (error) throw error;
+
+    rating_range = {"newbie":[0,1200],"pupil":[1200,1400],"specialist":[1400,1600],"expert":[1600,1900],"candidate master":[1900,2100],"master":[2100,2400],"grandmaster":[2400,2600]}
+    final_data={}
+    for(var ele in data){
+      for(var child_ele in data[ele]){
+        for(var item in rating_range){
+          if(child_ele>=rating_range[item][0] && child_ele<rating_range[item][1]){
+            if(final_data[ele]===undefined)final_data[ele]={};
+            if(final_data[ele][item]===undefined)final_data[ele][item]=0;
+            final_data[ele][item]+=data[ele][child_ele]
+          }
+      }
+    }
+  }
+  data = []
+  for(var item in final_data){
+    final_data[item]["rating"]=item;
+    var obj = final_data[item];
+    data.push(obj);
+  }
+//   data.columns = ["rating","newbie","pupil","specialist","expert","candidate master","master","grandmaster"];
+  for(var i=0;i<7;i++){
+    for(var ele of ranges){
+      if(data[i][ele]===undefined)data[i][ele]=0;
+    }
+  }
+
+
+  let arr_order = []
+
+  var Tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("id", "chirag")
+    .style("position", "absolute")
+    .style("z-index", "-1")
+    .style("opacity", "0")
+    .style("background", "rgba(240,240,240,0.9)")
+    .style("padding", "10px")
+    // .style("border", `2px solid black`)
+    // .style("border-radius", `5px`)
+    .style("color", `#262626`)
+    .style("border-radius", `5px`)
+    .style("box-shadow", `rgba(0, 0, 0, 0.24) 0px 3px 8px`)
+    .text("a simple tooltip");
+//   console.log(data);
+    final_data = []
+    for(var item in data){
+        // console.log(item);
+        // console.log(data[item]);
+        arr = []
+        obj = {}
+        obj["state"]=ranges[item];
+        for(var ele in data[item]){
+            if(ele==="rating")continue;
+            arr.push(data[item][ele]);
+        }
+        obj["stats"]=arr;
+        final_data.push(obj);
+    }
+    data = final_data
+    // console.log(data);
+
+    d3.select('.categories').selectAll('.checkbox')
+  .data(ids)
+  .enter()
+  .append('div')
+  .attr('class', 'checkbox')
+  .append('label').html(function(id, index) {
+    var checkbox = '<input id="' + id + '" type="checkbox" class="category" checked="true">';
+    // document.getElementById(id).checked = true;
+    return checkbox + ranges[index];
+  });
+
+
+  var margin = {top: 20, right: 200, bottom: 30, left: 50},
+    width = window.innerWidth - margin.left - margin.right-50,
+    height = 400 - margin.top - margin.bottom;
+
+var y = d3.scale.linear().range([height, 0]);
+
+var x0 = d3.scale.ordinal().rangeBands([0, width], .1);
+var x1 = d3.scale.ordinal();
+
+var color = d3.scale.ordinal()
+    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+//
+var xAxis = d3.svg.axis()
+    .scale(x0)
+    .orient("bottom")
+    
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .tickFormat(d3.format(".2s"));
+
+var svg = d3.select(".graph").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.select('.categories').selectAll('.category').on('change', function() {
+  var x = d3.select('.categories').selectAll('.category:checked');
+  var ids = x[0].map(function(category) {
+    return category.id;
+  });
+  arr_order = ids;
+  updateGraph(ids);
+});
+renderGraph();
+
+function renderGraph() {
+  y.domain([0, 0]);
+  // y0 domain is all the state names
+  x0.domain(data.map(function(d) { return d.state; }));
+  // y1 domain is all the age names, we limit the range to from 0 to a y0 band
+  x1.domain(ranges).rangeRoundBands([0, x0.rangeBand()]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+
+      var x = d3.select('.categories').selectAll('.category:checked');
+  var ids = x[0].map(function(category) {
+    return category.id;
+  });
+  arr_order = ids;
+  updateGraph(ids);
+}
+
+function updateGraph(selectedIds) {
+
+  var statesData = data.map(function(stateData) {
+    return {
+      state: stateData.state,
+      ages: selectedIds.map(function(selectedId) {
+        var index = ids.findIndex(function(id) {
+          return selectedId === id;
+        });
+        return {
+          id: ids[index],
+          name: ranges[index],
+          value: stateData.stats[index]
+        };
+      })
+    }
+  });
+
+
+  y.domain([0, d3.max(statesData, function(d) { return d3.max(d.ages, function(d) { return d.value }); })]);
+
+  x0.domain(statesData.map(function(d) { return d.state; }));
+
+  x1.domain(ids).rangeRoundBands([0, x0.rangeBand()]);
+
+  svg.selectAll('.axis.x').call(xAxis);
+  svg.selectAll('.axis.y').call(yAxis);
+
+  var state = svg.selectAll(".state")
+    .data(statesData);
+
+  var element ;
+  state.enter().append("g")
+    .attr("class", "state")
+    .attr("transform", function(d) {return "translate("+x0(d.state)+", 0)"; })
+    
+  var age = state.selectAll("rect")
+    .data(function(d) {
+      // console.log("ss",d);
+    // d.ages[0]["state"] = d.state || "pupil";
+    // console.log(d.ages.map((x)=>[{...x, state: d.state}]))
+     return d.ages.map((x)=>{ return {...x, state: d.state}}); })
+
+  age.enter().append("rect")
+
+
+    .attr('height', 0)
+const ranks_colors = {
+    "legendary grandmaster": "#ff0707",
+    "international grandmaster": "#ff0707",
+    grandmaster: "#ff0000",
+    "international master": "#ff8b00",
+    master: "#ffc783",
+    "candidate master": "#d23abc",
+    expert: "#7b37ff",
+    specialist: "#00afa2",
+    pupil: "#008e0f",
+    newbie: "#828282",
+    everyone: "#45c850",
+  };
+
+  const ranks_range = {
+    grandmaster: "2400 - 2600",
+    master: "2100 - 2399",
+    "candidate master": "1900 - 2099",
+    expert: "1600 - 1899",
+    specialist: "1400 - 1599",
+    pupil: "1200 - 1399",
+    newbie: "0 - 1199",
+  };
+
+  const ranks_rating = {
+    grandmaster: " > 2400",
+    master: "2100 - 2399",
+    "candidate master": "1900 - 2099",
+    expert: "1600 - 1899",
+    specialist: "1400 - 1599",
+    pupil: "1200 - 1399",
+    newbie: " < 1199",
+  };
+
+  age
+    .attr("y", function(d) { return   height; })
+    .attr("x", function(d, index) { return x1(ids[index])-x1.rangeBand(); })
+    .attr("id", function(d) { return d.id; })
+    .style("fill", function(d) { 
+      return ranks_colors[d.id]; })
+    
+
+    .on("mouseover", function (d) {
+        // alert("df");
+        // console.log("mouseover",d)
+        Tooltip.style("z-index", "1000")
+          .transition()
+          // .ease(d3.easeLinear)
+          .duration(100)
+          .style("opacity", 1);
+        d3.select(this).style("fill", d3.rgb(ranks_colors[d.id]).darker(0.5));
+      })
+      .on("mousemove", function (d, i) {
+        // let hr = Math.floor(data[i].duration / 60);
+        // let min = data[i].duration % 60;
+        let id = d.id;
+        let value = d.value;
+        let curr_val = arr_order[i];
+        // console.log(d, i)
+        let mane = d.state
+        Tooltip.style("left", event.pageX + "px")
+          .style("color", "#4d4d4d")
+          .style(
+            "top",
+              event.pageY - 100 +
+              "px"
+          )
+          .html((d) => {
+            return `<h3 style="margin-top:0px;margin-bottom:0px; color:${ranks_colors[mane]}"><b>${mane}</b></h3>
+            range : <b>${ranks_rating[id]}</b>
+            <br/>
+            count : <b>${value}</b>
+            `;
+          });
+      })
+      .on("mouseleave", function (d) {
+        // console.log("mouseleave",d)
+        d3.select(this).style("fill", d3.rgb(ranks_colors[d.id]));
+        Tooltip.style("z-index", "-1").style("opacity", 0);
+      }).attr("transform", function(d, index) { return "rotate(180 " + x1(ids[index]) + " " + height + ")"; })
+    .text(function(d) { return d.name })
+    .transition()
+    .attr("width", x1.rangeBand())
+    .attr("height",function(d) {
+      // console.log(y(d.value)); 
+      
+      
+      return  height-y(d.value); })
+
+
+
+
+  age.exit().transition().attr("height", 0).remove();
+
+  var legend = svg.selectAll(".legend")
+      .data(statesData[0].ages.map(function(age) { return age.name; }));
+
+  legend.enter().append("g");
+  legend
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + (200 + i * 20) + ")"; });
+
+  var legendColor = legend.selectAll('.legend-color').data(function(d) { return [d]; });
+  legendColor.enter().append("rect");
+  legendColor
+    .attr('class', 'legend-color')
+    .attr("x", width )
+    .attr("width", 20)
+
+    .attr("height", 18)
+    .style("fill",(d)=>{
+      // console.log("leg", d)
+      return ranks_colors[d]});
+
+  var legendText = legend.selectAll('.legend-text').data(function(d) { return [d]; });;
+
+  legendText.enter().append("text");
+  legendText
+    .attr('class', 'legend-text')
+    .attr("x", width+7*20 )
+    .attr("y", 9)
+    .attr("dy", ".4em")
+    .style("font-size", "20px")
+    .attr("text-anchor", "end")
+    .text(function(d) { return ranks_range[d]; });
+
+  legend.exit().remove();
+}});
+    </script>
+                
+</body>
+

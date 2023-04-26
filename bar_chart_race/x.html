@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>D3 Rectangle Example</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+  </head>
+  <body>
+    <svg width="200" height="400">
+      <rect x="50" y="50" width="10" height="0" fill="blue"></rect>
+    </svg>
+    <script>
+      // Rotate the rectangle by 45 degrees around its center
+
+      var height = 100;
+      var rect = d3.select("rect");
+      var centerX =
+        parseFloat(rect.attr("x")) + parseFloat(rect.attr("width")) / 2;
+      var centerY =
+        parseFloat(rect.attr("y")) + parseFloat(rect.attr("height")) / 2;
+      rect.attr("transform", "rotate(180 " + 50 + " " + 150 + ")");
+      rect.attr("y", "150").transition().attr("height", height);
+      var svg = d3.select("svg");
+      var circle = svg
+        .append("circle")
+        .attr("cx", 50)
+        .attr("cy", 50)
+        .attr("r", 3)
+        .attr("fill", "red");
+    </script>
+  </body>
+</html>

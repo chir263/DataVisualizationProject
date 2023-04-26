@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      html {
+        font-family: "Rubik", sans-serif;
+        overflow-y: hidden;
+        overflow-x: hidden;
+      }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>Population-Languages</title>
+  </head>
+
+  <body>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <!-- <h1 style="
+            color: #2f2f2f;
+            font-size: 50px;
+            ">
+            Population vs Most Popular Languages
+        </h1> -->
+      <svg id="pop-langs" width="1300" height="600"></svg>
+    </div>
+
+    <script>
+      let rawData = [
+        {
+          Lang: "C++",
+          Population: "195034",
+        },
+        {
+          Lang: "Python",
+          Population: "14077",
+        },
+        {
+          Lang: "Java",
+          Population: "5602",
+        },
+        {
+          Lang: "C#",
+          Population: "3942",
+        },
+        {
+          Lang: "FPC",
+          Population: "3604",
+        },
+        {
+          Lang: "Picat",
+          Population: "1347",
+        },
+        {
+          Lang: "C",
+          Population: "1231",
+        },
+        {
+          Lang: "Delphi",
+          Population: "632",
+        },
+        {
+          Lang: "PyPy",
+          Population: "444",
+        },
+        {
+          Lang: "Ruby",
+          Population: "214",
+        },
+        {
+          Lang: "Scala",
+          Population: "174",
+        },
+        {
+          Lang: "Haskell",
+          Population: "134",
+        },
+        {
+          Lang: "PHP",
+          Population: "101",
+        },
+        {
+          Lang: "JavaScript",
+          Population: "55",
+        },
+      ];
+      // rawData = rawData.map((d)=>{...d, Population: d.Population/10,})
+      var topLangs;
+      var finalData;
+      var pie;
+      var arc;
+
+      d3.csv(
+        "https://raw.githubusercontent.com/Pyrole-2002/D3_Lab1/main/yearwise.csv",
+        function (data) {
+          console.log(rawData);
+          rawData.sort((a, b) => b.Population - a.Population);
+          topLangs = rawData.slice(0, 4);
+          var otherLangsPop = rawData
+            .slice(4)
+            .reduce((a, b) => a + parseInt(b.Population), 0);
+          finalData = [
+            ...topLangs,
+            { Lang: "Other", Population: otherLangsPop.toString() },
+          ];
+          finalData = finalData.map((obj) => ({
+            ...obj,
+            Population: parseInt(obj.Population),
+          }));
+          console.log(finalData);
+
+          pie = d3
+            .pie()
+            .sort(null)
+            .value(function (d) {
+              return d.Population;
+            });
+          var Tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("id", "chirag")
+            .style("position", "absolute")
+            .style("z-index", "-1")
+            .style("opacity", "0")
+            .style("background", "rgba(240,240,240,0.9)")
+            .style("padding", "10px")
+            // .style("border", `2px solid black`)
+            // .style("border-radius", `5px`)
+            .style("color", `#262626`)
+            .style("border-radius", `5px`)
+            .style("box-shadow", `rgba(0, 0, 0, 0.24) 0px 3px 8px`)
+            .text("a simple tooltip");
+          arc = group
+            .selectAll(".arc")
+            .data(pie(finalData))
+            .enter()
+            .append("g")
+            .attr("class", "arc");
+
+          arc
+            .append("path")
+            .attr("d", path)
+            .on("mouseover", function (d, i) {
+              // alert("df");
+              // console.log("mouseover",d)
+              Tooltip.style("z-index", "1000")
+                .transition()
+                // .ease(d3.easeLinear)
+                .duration(100)
+                .style("opacity", 1);
+              d3.select(this).style("fill", d3.color(colors[i]).darker());
+            })
+            .on("mousemove", function (d, i) {
+              // let hr = Math.floor(data[i].duration / 60);
+              // let min = data[i].duration % 60;
+              var ele = d3.select(this)._groups[0][0].__data__.data;
+              console.log(ele);
+              Tooltip.style("left", event.pageX + "px")
+                .style("color", "#4d4d4d")
+                .style("top", event.pageY - 100 + "px")
+                .html((d) => {
+                  return `
+            Language : <b>${ele.Lang}</b>
+            <br/>
+            Avg submissions : <b>${ele.Population}</b>
+            `;
+                });
+            })
+            .on("mouseleave", function (d, i) {
+              // console.log("mouseleave",d)
+              d3.select(this).style("fill", d3.color(colors[i]));
+              Tooltip.style("z-index", "-1").style("opacity", 0);
+            })
+            .attr("fill", function (d, i) {
+              return colors[i];
+            });
+          // .on("mouseover", function (event, d) {
+          //   var ele = d3.select(this)._groups[0][0].__data__.data;
+          //   console.log(ele);
+          //   d3.select("body")
+          //     // .style("cursor", "pointer")
+          //     .append("div")
+          //     .attr("class", "tooltip")
+          //     .style("position", "absolute")
+          //     // .style("top", "500px")
+          //     // .style("left", "1100px")
+          //     .style("z-index", "10")
+          //     .style("opacity", 1);
+          // })
+          // .on("mousemove", function (d) {
+          //   var ele = d3.select(this)._groups[0][0].__data__.data;
+          //   console.log(ele, event.pageY, event.pageX);
+          //   d3
+          //     .select(".tooltip")
+          //     // .style("position", "absolute")
+          //     .style("top", event.pageY)
+          //     .style("left", event.pageX + 50)
+          //     .style("z-index", "10")
+          //     .style("opacity", 1)
+          //     .style("background", "#d6d6d6")
+          //     .style("padding", "10px")
+          //     .style("border-radius", "10px")
+          //     .style("border", "1px solid rgba(0, 0, 0, 0.24)")
+          //     .style("box-shadow", "rgba(0, 0, 0, 0.24) 0px 3px 8px").html(`
+          //                 <p style="font-size: 25px; text-align: center">
+          //                     Language: ${ele.Lang}
+          //                 </p>
+          //                 <p style="font-size: 18px; text-align: center">
+          //                     Population: ${ele.Population}
+          //                 </p>
+          //             `);
+          // })
+          // .on("mouseout", function (event, d) {
+          //   d3.selectAll(".tooltip").remove();
+          // })
+
+          arc
+            .append("text")
+            .attr("transform", function (d) {
+              return "translate(" + label.centroid(d) + ")";
+            })
+            .attr("fill", function (d, i) {
+              return colors[i];
+            })
+            .attr("text-anchor", "middle")
+            .text(function (d) {
+              return d.data.Lang;
+            });
+
+          group.append("div").attr("");
+        }
+      );
+
+      // var color = d3.scaleOrdinal(d3.schemeCategory10);
+      var colors = ["#e63946", "#11faee", "#a8dadc", "#457b9b", "#1d3557"];
+      var canvas = d3.select("#pop-langs");
+      var margin = 200;
+      var width = canvas.attr("width") - margin;
+      var height = canvas.attr("height") - margin;
+      var radius = Math.min(width, height) / 2;
+
+      var path = d3
+        .arc()
+        .outerRadius(radius - 10)
+        .innerRadius(0);
+
+      var label = d3
+        .arc()
+        .outerRadius(radius + 20)
+        .innerRadius(radius);
+
+      var xx = Number(width / 2) + Number(radius / 2);
+      var group = canvas
+        .append("g")
+        // .attr("x", width / 2 + 200)
+
+        .attr("transform", "translate(" + xx + "," + height * 0.75 + ")");
+    </script>
+  </body>
+</html>

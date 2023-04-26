@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<style>
+  html,
+  body {
+    /* font-family: "Courier New", monospace; */
+    /* background-color: #F2EDE4; */
+    font-family: "Poppins", sans-serif;
+  }
+
+  .bar {
+    fill: steelblue;
+  }
+
+  .axis path {
+    display: none;
+  }
+
+  #newbie {
+    color: #8d99ae;
+  }
+  #pupil {
+    color: #57cc99;
+  }
+  #specialist {
+    color: #90f1ef;
+  }
+  #expert {
+    color: #4361ee;
+  }
+  #candidatemaster {
+    color: #7209b7;
+  }
+  #master {
+    color: #ff9b54;
+  }
+  #internationalmaster {
+    color: #ff7f51;
+  }
+  #grandmaster {
+    color: #ad2831;
+  }
+  #internationalgrandmaster {
+    color: #800e13;
+  }
+  #legendarygrandmaster {
+    color: #640d14;
+  }
+
+  #A {
+    color: #f9c74f;
+  }
+  #B {
+    color: #ff8c00;
+  }
+  #C {
+    color: #d0743c;
+  }
+  #D {
+    color: #a05d56;
+  }
+  #E {
+    color: #6b486b;
+  }
+  #F {
+    color: #7b6888;
+  }
+  #G {
+    color: #8a89a6;
+  }
+  /* .range(["#f9c74f", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c","#ff8c00"]); */
+</style>
+<center>
+  <svg width="1100" height="500"></svg>
+</center>
+<div id="tooltip" class="hidden"></div>
+<script src="//d3js.org/d3.v4.min.js"></script>
+<script>
+  var svg = d3.select("svg"),
+    margin = { top: 50, right: 60, bottom: 30, left: 160 },
+    height = +svg.attr("width") - margin.left - margin.right,
+    width = +svg.attr("height") - margin.top - margin.bottom,
+    g = svg
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
+    barPadding = 3; // pixels
+
+  var y = d3.scaleBand().rangeRound([0, width]).padding(0.1).align(0.1);
+
+  var x = d3.scaleLinear().rangeRound([height, 0]);
+
+  var z = d3
+    .scaleOrdinal()
+    .range([
+      "#f9c74f",
+      "#8a89a6",
+      "#7b6888",
+      "#6b486b",
+      "#a05d56",
+      "#d0743c",
+      "#ff8c00",
+    ]);
+
+  var stack = d3.stack().offset(d3.stackOffsetExpand);
+
+  function preprocess(data) {
+    sum = {
+      newbie: [0, 0, 0, 0, 0, 0],
+      newbie_cnt: [0, 0, 0, 0, 0, 0],
+      pupil: [0, 0, 0, 0, 0, 0],
+      pupil_cnt: [0, 0, 0, 0, 0, 0],
+      specialist: [0, 0, 0, 0, 0, 0],
+      specialist_cnt: [0, 0, 0, 0, 0, 0],
+      expert: [0, 0, 0, 0, 0, 0],
+      expert_cnt: [0, 0, 0, 0, 0, 0],
+      "candidate master": [0, 0, 0, 0, 0, 0],
+      "candidate master_cnt": [0, 0, 0, 0, 0, 0],
+      master: [0, 0, 0, 0, 0, 0],
+      master_cnt: [0, 0, 0, 0, 0, 0],
+      "international master": [0, 0, 0, 0, 0, 0],
+      "international master_cnt": [0, 0, 0, 0, 0, 0],
+      grandmaster: [0, 0, 0, 0, 0, 0],
+      grandmaster_cnt: [0, 0, 0, 0, 0, 0],
+      "international grandmaster": [0, 0, 0, 0, 0, 0],
+      "international grandmaster_cnt": [0, 0, 0, 0, 0, 0],
+      "legendary grandmaster": [0, 0, 0, 0, 0, 0],
+      "legendary grandmaster_cnt": [0, 0, 0, 0, 0, 0],
+    };
+    let map_lev = {};
+    map_lev["newbie"] = 2;
+    map_lev["pupil"] = 3;
+    map_lev["specialist"] = 3;
+    map_lev["expert"] = 4;
+    map_lev["candidate master"] = 4;
+    map_lev["master"] = 5;
+    map_lev["international master"] = 5;
+    map_lev["grandmaster"] = 6;
+    map_lev["international grandmaster"] = 7;
+    map_lev["legendary grandmaster"] = 8;
+    d3.json("temp.json", function (error, data1) {
+      for (var i = 0; i < data.result.rows.length; i++) {
+        if (
+          data.result.rows[i].party.participantType === "CONTESTANT" ||
+          data.result.rows[i].party.participantType === "OUT_OF_COMPETITION"
+        ) {
+          if (data1[data.result.rows[i].party.members[0].handle] === undefined)
+            continue;
+          let level_of_person =
+            data1[data.result.rows[i].party.members[0].handle].rank;
+          for (var j = 0; j < map_lev[level_of_person]; j++) {
+            if (
+              data.result.rows[i].problemResults[j]
+                .bestSubmissionTimeSeconds !== undefined
+            ) {
+              let time_taken = Math.floor(
+                data.result.rows[i].problemResults[j]
+                  .bestSubmissionTimeSeconds / 60
+              );
+              sum[level_of_person][j] += time_taken;
+              sum[level_of_person + "_cnt"][j]++;
+            }
+          }
+        }
+      }
+      (new_arr = []), (t_arr1 = []), (t_arr2 = []);
+      let counter = 0;
+      for (var ele in sum) {
+        if (ele.includes("cnt")) continue;
+        for (var i = 0; i < 8; i++) {
+          if (sum[ele + "_cnt"][i]) {
+            sum[ele][i] = Math.floor(sum[ele][i] / sum[ele + "_cnt"][i]);
+          } else {
+            sum[ele][i] = 0;
+            for (var j = i + 1; j < 8; j++) {
+              sum[ele][j] = 0;
+            }
+            break;
+          }
+        }
+        t_arr2.push(sum[ele]);
+        t_arr1.push(ele);
+        counter++;
+      }
+
+      for (var i = 0; i < t_arr1.length; i++) {
+        new_arr.push({
+          range: t_arr1[i],
+          A: t_arr2[i][0],
+          B: t_arr2[i][1],
+          C: t_arr2[i][2],
+          D: t_arr2[i][3],
+          E: t_arr2[i][4],
+          F: t_arr2[i][5],
+          G: t_arr2[i][5],
+          H: t_arr2[i][6],
+        });
+      }
+
+      data = new_arr;
+      data.columns = ["range", "H", "G", "F", "E", "D", "C", "B", "A"];
+
+      data.sort(function (a, b) {
+        return b[data.columns[1]] / b.total - a[data.columns[1]] / a.total;
+      });
+
+      console.log(data);
+      new_data = [];
+      for (var i = 9; i >= 0; i--) {
+        new_data.push(data[i]);
+      }
+      new_data.columns = data.columns;
+      data = new_data;
+      console.log(data);
+      // console.log(data);
+      y.domain(
+        data.map(function (d) {
+          return d.range;
+        })
+      );
+      z.domain(data.columns.slice(1));
+
+      let helper;
+      var serie = g
+        .selectAll(".serie")
+        .data(stack.keys(data.columns.slice(1))(data))
+        .enter()
+        .append("g")
+        .attr("class", "serie")
+        .attr("fill", function (d) {
+          return z(d.key);
+        })
+        .on("mouseover", function (d) {
+          helper = d;
+          // console.log(variable);
+          // console.log(this);
+          d3.select("#tooltip")
+            .style("cursor", "pointer")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("opacity", 1)
+            .style("background", "rgba(220, 220, 220, 1)")
+            .style("padding", "10px")
+            .style("color", "#262626")
+            .style("border-radius", "5px")
+            .style("border", "1px solid rgba(0, 0, 0, 0.24)")
+            .style("box-shadow", "rgba(0, 0, 0, 0.24) 0px 3px 8px");
+        })
+        .on("mousemove", function (d) {
+          helper = d;
+          // console.log(variable);
+          // console.log(this);
+          d3.select(".tooltip")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("opacity", 1)
+            .style("background", "rgba(220, 220, 220, 1)")
+            .style("padding", "10px")
+            .style("color", "#262626")
+            .style("border-radius", "5px")
+            .style("border", "1px solid rgba(0, 0, 0, 0.24)")
+            .style("box-shadow", "rgba(0, 0, 0, 0.24) 0px 3px 8px")
+            .style("left", event.pageX + 30 + "px")
+            .style("top", event.pageY + "px")
+            .html(
+              `
+            <h2 style="font-size:25px" id="${variable.data.range.replace(
+              " ",
+              ""
+            )}">
+                ${variable.data.range}
+              </h2>
+              <h3 style="font-size:15px">
+                Average Time taken on <b id="${d.key.replace(" ", "")}">${
+                d.key
+              }</b>: ${Math.floor(
+                ((x(variable[0]) - x(variable[1])) / 740) * 100
+              )}min
+              </h3>
+            `
+            );
+        })
+        .on("mouseout", function () {
+          d3.select("body").style("cursor", "default");
+          d3.selectAll(".tooltip").remove();
+        });
+
+      let variable;
+      var bar = serie
+        .selectAll("rect")
+        .data(function (d) {
+          return d;
+        })
+        .enter()
+        .append("rect")
+        .attr("y", function (d) {
+          return y(d.data.range);
+        })
+        .attr("x", function (d) {
+          return x(d[1]) + barPadding;
+        })
+        .attr("width", function (d) {
+          return Math.max(0, x(d[0]) - x(d[1]) - barPadding);
+        })
+        .attr("height", y.bandwidth())
+        .on("mouseover", function (d) {
+          variable = d;
+          console.log(this, this.x.baseVal.value, this.width);
+          // svg.append("text")
+          // .attr("class","for_remove")
+          // .attr("x",this.x.baseVal.value+(this.width.baseVal.value)/2)
+          // .attr("y",this.y.baseVal.value+(this.height.baseVal.value)/2)
+
+          // .text(helper.key)
+        })
+        .on("mouseout", function () {
+          d3.select("body").style("cursor", "default");
+          d3.select(".tooltip").remove();
+          // d3.select(".for_remove").remove();
+        });
+
+      // console.log(bar);
+      bar
+        .append("text")
+        .attr("x", function (d) {
+          return x(d[1]);
+        })
+        .attr("dy", "1.35em")
+        .text(function (d) {
+          return d;
+        });
+
+      g.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+      g.append("g")
+        .attr("class", "axis axis--y")
+        .call(d3.axisLeft(y).ticks(10, "%"));
+
+      var legend = serie
+        .append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d) {
+          var d = d[0];
+          return (
+            "translate(" +
+            (x(d[0]) + x(d[1])) / 2 +
+            ", " +
+            (y(d.data.range) - y.bandwidth() + 30) +
+            ")"
+          );
+        });
+
+      // console.log(legend)
+      legend.append("line").attr("y1", 1).attr("y2", 6).attr("stroke", "#000");
+
+      legend
+        .append("text")
+        .attr("y", 0)
+        .attr("dx", "-0.35em")
+        .attr("fill", "#000")
+        .style("font", "10px sans-serif")
+        .text(function (d) {
+          return d.key;
+        });
+    });
+  }
+  d3.json("data.json", function (error, data) {
+    if (error) throw error;
+    data = preprocess(data);
+    return;
+  });
+</script>

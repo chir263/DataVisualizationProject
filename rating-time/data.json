@@ -1,0 +1,44 @@
+[
+  {
+    "Rating": "Newbie",
+    "Time": "368",
+    "Population": "29453",
+    "Range": "0-1200"
+  },
+  {
+    "Rating": "Pupil",
+    "Time": "583",
+    "Population": "6819",
+    "Range": "1200-1400"
+  },
+  {
+    "Rating": "Specialist",
+    "Time": "700",
+    "Population": "4412",
+    "Range": "1400-1600"
+  },
+  {
+    "Rating": "Expert",
+    "Time": "916",
+    "Population": "2997",
+    "Range": "1600-1900"
+  },
+  {
+    "Rating": "Candidate Master",
+    "Time": "1135",
+    "Population": "1010",
+    "Range": "1900-2100"
+  },
+  {
+    "Rating": "Master",
+    "Time": "1371",
+    "Population": "720",
+    "Range": "2100-2400"
+  },
+  {
+    "Rating": "Grandmaster",
+    "Time": "1884",
+    "Population": "308",
+    "Range": ">2400"
+  }
+]

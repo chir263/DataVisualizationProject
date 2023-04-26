@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Rubik", sans-serif;
+      }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>Scatter</title>
+  </head>
+
+  <body>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <svg id="scatter" width="1000" height="600"></svg>
+    </div>
+
+    <script>
+      var colors = [
+        "#d1d1d1",
+        "#00ff8c",
+        "#00ffff",
+        "#476fff",
+        "#a545ff",
+        "#ffff82",
+        "#ff4573",
+      ];
+      let rawData;
+
+      d3.json("./data.json", function (data) {
+        console.log(data);
+        rawData = data;
+        var ratingArray = rawData.map((data) => data.Rating);
+        var timeArray = rawData.map((data) => data.Time);
+
+        xScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(ratingArray)])
+          .range([0, width]);
+        var xAxis = d3.axisBottom(xScale);
+
+        yScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(timeArray)])
+          .range([height, 0]);
+        var yAxis = d3.axisLeft(yScale);
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 0 + ", " + height + ")")
+          .call(xAxis)
+          .selectAll("line,path")
+          .style("stroke", "#2f2f2f")
+          .style("stroke-width", "5px");
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 0 + ", " + 0 + ")")
+          .call(yAxis)
+          .selectAll("line,path")
+          .style("stroke", "#2f2f2f")
+          .style("stroke-width", "5px");
+
+        group
+          .selectAll("text")
+          .style("font-family", "Rubik")
+          .style("fill", "#2f2f2f")
+          .style("font-size", "18px");
+
+        group
+          .append("text")
+          .attr("id", "yAxisLabel")
+          .attr("transform", "rotate(-90)")
+          .style("font-size", "25px")
+          .attr("y", 20 - margin / 2)
+          .attr("x", -50 - height / 2)
+          .style("font-family", "Rubik")
+          .style("fill", "#2f2f2f")
+          .text("Time Spent (Days)");
+
+        group
+          .append("text")
+          .attr("id", "xAxisLabel")
+          .attr("y", height + 70)
+          .attr("x", width / 2 - 120)
+          .style("font-size", "25px")
+          .style("font-family", "Rubik")
+          .style("fill", "#2f2f2f")
+          .text("Rating");
+
+        group
+          .selectAll("circle")
+          .data(rawData)
+          .enter()
+          .append("circle")
+          .attr("cx", function (d) {
+            if (d.Rating < 0) return -300;
+            return xScale(d.Rating);
+          })
+          .attr("cy", function (d) {
+            return yScale(d.Time);
+          })
+          .attr("r", 2)
+          .style("fill", function (d) {
+            if (0 < d.Rating && d.Rating <= 1200) {
+              return colors[0];
+            } else if (1200 < d.Rating && d.Rating <= 1400) {
+              return colors[1];
+            } else if (1400 < d.Rating && d.Rating <= 1600) {
+              return colors[2];
+            } else if (1600 < d.Rating && d.Rating <= 1900) {
+              return colors[3];
+            } else if (1900 < d.Rating && d.Rating <= 2100) {
+              return colors[4];
+            } else if (2100 < d.Rating && d.Rating <= 2400) {
+              return colors[5];
+            } else {
+              return colors[6];
+            }
+          });
+      });
+
+      var canvas = d3.select("#scatter");
+      var margin = 200;
+      var width = canvas.attr("width") - margin;
+      var height = canvas.attr("height") - margin;
+
+      var xScale;
+      var yScale;
+
+      var group = canvas
+        .append("g")
+        .attr("transform", "translate(" + margin / 2 + "," + margin / 2 + ")");
+
+      var points = [
+        { xpoint: 100, ypoint: height + 100 },
+        { xpoint: 200, ypoint: height + 70 },
+        { xpoint: 250, ypoint: height + 70 },
+        { xpoint: 300, ypoint: height + 60 },
+        { xpoint: 350, ypoint: height + 50 },
+        { xpoint: 400, ypoint: height + 35 },
+        { xpoint: 450, ypoint: height + 35 },
+        { xpoint: 500, ypoint: height + 10 },
+        { xpoint: 550, ypoint: height - 10 },
+        { xpoint: 600, ypoint: height - 40 },
+        { xpoint: 650, ypoint: height - 70 },
+        { xpoint: 700, ypoint: height - 100 },
+        { xpoint: 750, ypoint: height - 140 },
+        { xpoint: 800, ypoint: height - 190 },
+        { xpoint: 900, ypoint: height - 0.7 * height },
+      ];
+
+      var Gen = d3
+        .line()
+        .x((p) => p.xpoint)
+        .y((p) => p.ypoint)
+        .curve(d3.curveBasis);
+
+      canvas
+        .append("path")
+        .attr("d", Gen(points))
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", "5px");
+      // .attr("stroke-dasharray", "5, 5");
+    </script>
+  </body>
+</html>

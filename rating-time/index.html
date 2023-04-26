@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Rubik", sans-serif;
+      }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>Rating-Time</title>
+  </head>
+
+  <body style="background-color: #060a1a">
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <h1 style="color: #efefef; font-size: 50px">Rating-Population-Time</h1>
+      <svg id="rating-time" width="1300" height="750"></svg>
+    </div>
+
+    <script>
+      var colors = [
+        "#d1d1d1",
+        "#00ff8c",
+        "#00ffff",
+        "#476fff",
+        "#a545ff",
+        "#ffff82",
+        "#ff4573",
+      ];
+      let rawData;
+
+      d3.json("./rating-time/data.json", function (data) {
+        console.log(data);
+        rawData = data;
+        const populationArray = rawData.map((data) => Number(data.Population));
+        const timeArray = rawData.map((data) => Number(data.Time));
+        const ratingArray = rawData.map((data) => data.Rating);
+        const rangeArray = rawData.map((data) => data.Range);
+        const totalPopulation = populationArray.reduce(
+          (acc, curr) => acc + curr
+        );
+
+        const cumPopArray = populationArray.reduce((acc, curr, i) => {
+          if (i === 0) {
+            acc.push(0);
+          } else {
+            acc.push(acc[i - 1] + populationArray[i - 1]);
+          }
+          return acc;
+        }, []);
+
+        xScale = d3
+          .scaleLinear()
+          .domain([0, totalPopulation])
+          .range([0, width]);
+        var xAxis = d3.axisBottom(xScale);
+
+        yScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(timeArray)])
+          .range([height, 0]);
+        var yAxis = d3.axisLeft(yScale);
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 0 + ", " + height + ")")
+          .call(xAxis)
+          .selectAll("line,path")
+          .style("stroke", "#efefef")
+          .style("stroke-width", "2px");
+
+        group
+          .append("g")
+          .attr("transform", "translate(" + 0 + ", " + 0 + ")")
+          .call(yAxis)
+          .selectAll("line,path")
+          .style("stroke", "#efefef")
+          .style("stroke-width", "2px");
+
+        group
+          .selectAll("text")
+          .style("font-family", "Rubik")
+          .style("fill", "#efefef")
+          .style("font-size", "18px");
+
+        group
+          .append("text")
+          .attr("id", "yAxisLabel")
+          .attr("transform", "rotate(-90)")
+          .style("font-size", "25px")
+          .attr("y", 20 - margin / 2)
+          .attr("x", -50 - height / 2)
+          .style("font-family", "Rubik")
+          .style("fill", "#efefef")
+          .text("TIME SPENT(in days)");
+
+        group
+          .append("text")
+          .attr("id", "xAxisLabel")
+          .attr("y", height + 70)
+          .attr("x", width / 2 - 120)
+          .style("font-size", "25px")
+          .style("font-family", "Rubik")
+          .style("fill", "#efefef")
+          .text("RATINGS-POPULATION");
+
+        group
+          .selectAll("rect")
+          .data(rawData)
+          .enter()
+          .append("rect")
+          .attr("y", (d) => yScale(d.Time))
+          .attr("x", (d, i) => (cumPopArray[i] * width) / totalPopulation)
+          .attr("height", (d) => height - yScale(d.Time))
+          .attr(
+            "width",
+            (d, i) => (populationArray[i] * width) / totalPopulation
+          )
+          .style("fill", (d, i) => colors[i])
+          .style("opacity", "0.4");
+
+        group
+          .selectAll("rect")
+          .on("mouseover", function (event, d) {
+            let i = d3.selectAll("rect").nodes().indexOf(this);
+            d3.select(this).transition().duration(250).style("opacity", "1");
+            d3
+              .select("body")
+              .style("cursor", "pointer")
+              .append("div")
+              .attr("class", "tooltip")
+              .style("position", "absolute")
+              .style("left", "700px")
+              .style("top", "250px")
+              .style("z-index", "10")
+              .style("opacity", 1)
+              .style("background", "#151a2e")
+              .style("padding", "10px")
+              .style("color", colors[i])
+              .style("border-radius", "10px")
+              .style("border", "1px solid rgba(0, 0, 0, 0.24)")
+              .style("box-shadow", "rgba(0, 0, 0, 0.24) 0px 3px 8px").html(`
+                            <p style="font-size: 25px; text-align: center">
+                                ${ratingArray[i]}
+                            </p>
+                            <p style="font-size: 18px; text-align: center">
+                                Population: ${populationArray[i]}
+                            </p>
+                            <p style="font-size: 18px; text-align: center">
+                                Rating Range: ${rangeArray[i]}
+                            </p>
+                        `);
+          })
+          .on("mouseout", function (d, i) {
+            d3.select(this).transition().duration(250).style("opacity", "0.4");
+            d3.select("body").style("cursor", "default");
+            d3.selectAll(".tooltip").remove();
+          });
+      });
+
+      var canvas = d3.select("#rating-time");
+      var margin = 200;
+      var width = canvas.attr("width") - margin;
+      var height = canvas.attr("height") - margin;
+
+      var xScale;
+      var yScale;
+
+      var group = canvas
+        .append("g")
+        .attr("transform", "translate(" + margin / 2 + "," + margin / 2 + ")");
+    </script>
+  </body>
+</html>
