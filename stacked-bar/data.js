@@ -79760,3 +79760,21 @@ let tag_name = [
   "2-sat",
   "expression parsing",
 ];
+
+tags_name_short = [
+    "constructive algorithms",
+    "greedy",
+    "graphs",
+    "math",
+    "dp",
+    "number theory",
+    "strings",
+    "combinatorics",
+    "dfs and similar",
+    "implementation",
+    "trees",
+    "brute force",
+    "data structures",
+    "binary search",
+    "sortings"
+]

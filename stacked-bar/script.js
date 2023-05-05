@@ -15,10 +15,15 @@ const ranges = [
 let color_multi_line = d3
   .scaleOrdinal()
   .range(
-    tag_name.map((d) =>
+    tags_name_short.map((d) =>
       d3.rgb(Math.random() * 185, Math.random() * 185, Math.random() * 185)
     )
   );
+// console.log(
+//   tags_name_short.map((d) =>
+//     d3.rgb(Math.random() * 185, Math.random() * 185, Math.random() * 185)
+//   )
+// );
 function load(type) {
   function getRange(d) {
     if (type === "rating") {
@@ -113,6 +118,8 @@ function plotLine(type, len) {
       return sum >= 500;
     });
   }
+
+  console.log(data.map((d) => d.name));
   // data.sort(function compare(a, b) {
   //   if (a.name < b.name) {
   //     return -1;
@@ -166,7 +173,7 @@ function plotLine(type, len) {
     .append("text")
     .attr("x", (width - margin) / 2)
     .attr("y", 0 - margin / 2)
-    .text(type)
+    .html(`tags >500 problems (${type})`)
     .style("font-size", "18px")
     .attr("text-anchor", "middle");
   svg
