@@ -12,16 +12,69 @@ const ranges = [
 ];
 // console.log([`${Math.random()}abcd]);
 
-let color_multi_line = d3
-  .scaleOrdinal()
-  .range(
-    tags_name_short.map((d) =>
-      d3.rgb(Math.random() * 185, Math.random() * 185, Math.random() * 185)
-    )
-  );
+let color_big = [
+  "#1f77b4", // blue
+  "#ff7f0e", // orange
+  "#2ca02c", // green
+  "#d62728", // red
+  "#9467bd", // purple
+  "#8c564b", // brown
+  "#e377c2", // pink
+  "#bcbd22", // lime
+  "#17becf", // teal
+  "#393b79", // dark blue
+  "#5254a3", // deep blue
+  "#6b6ecf", // strong blue
+  "#9c9ede", // light blue
+  "#637939", // dark green
+  "#8ca252", // green
+  "#b5cf6b", // light green
+  "#bd9e39", // dark orange
+  "#e7ba52", // yellow
+  "#ce6dbd", // magenta
+  "#de9ed6", // light magenta
+  "#bd3939", // dark red
+  "#e7969c", // light pink
+  "#7b4173", // dark purple
+  "#ffbb78", // peach
+  "#a6cee3", // light blue
+  "#1f78b4", // blue
+  "#b2df8a", // light green
+  "#33a02c", // dark green
+  "#fb9a99", // light red
+  "#e31a1c", // red
+  "#fdbf6f", // light orange
+  "#ff7f00", // orange
+  "#cab2d6", // light purple
+  "#6a3d9a", // dark purple
+  "#ffff99", // light yellow
+  "#b15928", // dark brown
+  "#fdae61", // orange-yellow
+];
+
+let color_small = [
+  "#1f77b4", // blue
+  "#ff7f0e", // orange
+  "#2ca02c", // green
+  "#d62728", // red
+  "#9467bd", // purple
+  "#8c564b", // brown
+  "#e377c2", // pink
+  "#bcbd22", // lime
+  "#17becf", // teal
+  "#393b79", // dark blue
+  "#5254a3", // deep blue
+  "#6b6ecf", // strong blue
+  "#9c9ede", // light blue
+  "#637939", // dark green
+  "#8ca252", // green
+];
+
 // console.log(
 //   tags_name_short.map((d) =>
-//     d3.rgb(Math.random() * 185, Math.random() * 185, Math.random() * 185)
+//     d3.format("#x")(
+//       d3.rgb(Math.random() * 185, Math.random() * 185, Math.random() * 185)
+//     )
 //   )
 // );
 function load(type) {
@@ -90,6 +143,10 @@ function load(type) {
   return { data, maxm };
 }
 function plotLine(type, len) {
+  let color_multi_line = d3
+    .scaleOrdinal()
+    .range(len === 0 ? color_small : color_big);
+
   const ranks_colors = {
     "legendary grandmaster": "#ff0707",
     "international grandmaster": "#ff0707",
@@ -382,7 +439,7 @@ function plotLine(type, len) {
     .attr("d", (d) => {
       return line(d.values);
     })
-    .style("stroke", (d, i) => color_multi_line(i))
+    .style("stroke", (d, i) => color_multi_line(d.name))
     .style("opacity", lineOpacity)
     .on("mouseover", line_mouse_over)
     .on("mouseout", line_mouse_out);
@@ -395,7 +452,7 @@ function plotLine(type, len) {
     .attr("class", (d) => {
       return "circle_line_chart" + replaceStr(d.name, " ", "_");
     })
-    .style("fill", (d, i) => color_multi_line(i))
+    .style("fill", (d, i) => color_multi_line(d.name))
     .selectAll("circle")
     .data((d) => d.values)
     .enter()
